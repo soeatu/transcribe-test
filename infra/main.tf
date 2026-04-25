@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -30,9 +34,19 @@ resource "azurerm_resource_group" "main" {
 }
 
 # -----------------------------------------------------------------------------
+# ランダムサフィックス（グローバル一意名に使用）
+# -----------------------------------------------------------------------------
+resource "random_string" "suffix" {
+  length  = 6
+  special = false
+  upper   = false
+}
+
+# -----------------------------------------------------------------------------
 # ローカル変数
 # -----------------------------------------------------------------------------
 locals {
+  suffix = random_string.suffix.result
   common_tags = {
     Project     = var.project_name
     Environment = var.environment

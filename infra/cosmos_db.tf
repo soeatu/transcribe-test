@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 
 resource "azurerm_cosmosdb_account" "main" {
-  name                = "cosmos-${var.project_name}-${var.environment}"
+  name                = "cosmos-${var.project_name}-${var.environment}-${local.suffix}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   offer_type          = "Standard"

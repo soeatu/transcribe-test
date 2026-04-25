@@ -4,6 +4,7 @@ import { useSessionStore } from "../features/session/stores/sessionStore";
 import { useTranscriptStore } from "../features/transcript/stores/transcriptStore";
 import { useSpeechTranscriber } from "../features/transcript/hooks/useSpeechTranscriber";
 import { useSummaryStore } from "../features/summary/stores/summaryStore";
+import { transcriptApi } from "../lib/api";
 
 const SPEAKER_COLORS = [
   "var(--speaker-1)", "var(--speaker-2)", "var(--speaker-3)",
@@ -33,14 +34,30 @@ export function SessionPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentSession, fetchSession, updateSession } = useSessionStore();
-  const { transcripts, interimText, isRecording } = useTranscriptStore();
+  const { transcripts, interimText, isRecording, clearTranscripts, setTranscripts } = useTranscriptStore();
   const { isGenerating, generateSummary } = useSummaryStore();
   const { start, stop, error: speechError } = useSpeechTranscriber(id || "");
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
+  // セッション変更時: ストアクリア → 既存データ読み込み
   useEffect(() => {
-    if (id) fetchSession(id);
-  }, [id, fetchSession]);
+    if (!id) return;
+    let cancelled = false;
+
+    clearTranscripts();
+    fetchSession(id);
+
+    transcriptApi.getAll(id).then((data) => {
+      if (!cancelled) {
+        setTranscripts(data);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   // Auto scroll
   useEffect(() => {

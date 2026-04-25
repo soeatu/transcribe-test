@@ -42,11 +42,12 @@ export class TranscriptRepository {
     const { resources } = await container.items
       .query<Transcript>({
         query:
-          "SELECT * FROM c WHERE c.type = 'transcript' AND c.sessionId = @sid ORDER BY c.offsetMs",
+          "SELECT * FROM c WHERE c.type = 'transcript' AND c.sessionId = @sid",
         parameters: [{ name: "@sid", value: sessionId }],
       })
       .fetchAll();
-    return resources;
+    // アプリ側で offsetMs 昇順ソート
+    return resources.sort((a, b) => a.offsetMs - b.offsetMs);
   }
 }
 

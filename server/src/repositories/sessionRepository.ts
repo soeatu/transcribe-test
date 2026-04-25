@@ -54,11 +54,13 @@ export class SessionRepository {
     const container = this.getContainerOrThrow();
     const { resources } = await container.items
       .query<Session>({
-        query:
-          "SELECT * FROM c WHERE c.type = 'session' ORDER BY c.createdAt DESC",
+        query: "SELECT * FROM c WHERE c.type = 'session'",
       })
       .fetchAll();
-    return resources;
+    // アプリ側で降順ソート
+    return resources.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }
 
   async update(

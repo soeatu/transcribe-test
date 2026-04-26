@@ -515,11 +515,14 @@ erDiagram
 
 ### 4.4 主要クエリ
 
-| 操作 | クエリ |
-|:---|:---|
-| セッション一覧取得 | `SELECT * FROM c WHERE c.type = 'session' ORDER BY c.createdAt DESC` |
-| セッション内の文字起こし全取得 | `SELECT * FROM c WHERE c.type = 'transcript' AND c.sessionId = @sid ORDER BY c.offsetMs` |
-| セッションの要約取得 | `SELECT * FROM c WHERE c.type = 'summary' AND c.sessionId = @sid` |
+| 操作 | クエリ | 備考 |
+|:---|:---|:---|
+| セッション一覧取得 | `SELECT * FROM c WHERE c.type = 'session'` | インデックス制限回避のため、取得後にアプリ側で `createdAt` 降順ソート |
+| セッション内の文字起こし全取得 | `SELECT * FROM c WHERE c.type = 'transcript' AND c.sessionId = @sid` | 取得後にアプリ側で `offsetMs` 昇順ソート |
+| セッションの要約取得 | `SELECT * FROM c WHERE c.type = 'summary' AND c.sessionId = @sid` | |
+
+> **注意**: パフォーマンス向上のため `excluded_path "/*"` を設定しているコンテナでは、`ORDER BY` に必要なレンジインデックスが不足する場合がある。その際はアプリケーション側でのソートを採用する。
+
 
 ---
 
@@ -675,13 +678,15 @@ sequenceDiagram
 
 ### 6.3 通信セキュリティ
 
-| 通信経路 | プロトコル | 備考 |
+| リソース | SKU / プラン | 備考 |
 |:---|:---|:---|
-| Client ↔ Backend | HTTPS (TLS 1.2+) | App Service の強制 HTTPS 設定 |
-| Client ↔ Web PubSub | WSS | トークンベース認証 |
-| Client ↔ Speech Service | WSS | 認証トークン（10分有効） |
-| Backend ↔ Cosmos DB | HTTPS | マネージド ID 推奨 |
-| Backend ↔ OpenAI | HTTPS | API Key ヘッダー認証 |
+| Azure AI Speech Service | S0（Standard） | ConversationTranscriber、話者分離対応 |
+| Azure OpenAI Service | Standard | GPT-4o モデルデプロイ |
+| Azure Web PubSub | Free_F1 | 開発時は Free、WebSocket に対応 |
+| Azure App Service | B1 | japaneast でのクォータ制限回避および WebSocket 対応のため B1 を使用 |
+| Azure Cosmos DB | Serverless | 低コスト運用。インデックス制限に注意 |
+| Azure Application Insights | — | 監視・ログ収集 |
+ API Key ヘッダー認証 |
 
 ---
 
@@ -777,18 +782,19 @@ interface LogEntry {
 
 ## 付録: 環境変数一覧
 
-| 変数名 | 説明 | 例 |
+| 変数名 | 説明 | 形式の注意 |
 |:---|:---|:---|
 | `PORT` | サーバーポート | `3001` |
 | `NODE_ENV` | 実行環境 | `development` |
-| `AZURE_SPEECH_KEY` | Speech Service API Key | `*****` |
+| `AZURE_SPEECH_KEY` | Speech Service API Key | |
 | `AZURE_SPEECH_REGION` | Speech Service リージョン | `japaneast` |
-| `AZURE_OPENAI_ENDPOINT` | OpenAI エンドポイント | `https://xxx.openai.azure.com/` |
-| `AZURE_OPENAI_KEY` | OpenAI API Key | `*****` |
+| `AZURE_OPENAI_ENDPOINT` | OpenAI エンドポイント | **ベースURLのみ** (例: `https://xxx.api.cognitive.microsoft.com`) |
+| `AZURE_OPENAI_KEY` | OpenAI API Key | |
 | `AZURE_OPENAI_DEPLOYMENT` | デプロイメント名 | `gpt-4o` |
-| `AZURE_PUBSUB_CONNECTION_STRING` | Web PubSub 接続文字列 | `Endpoint=https://...` |
+| `AZURE_PUBSUB_CONNECTION_STRING` | Web PubSub 接続文字列 | `Endpoint=https://...` で始まる形式 |
 | `AZURE_PUBSUB_HUB_NAME` | Web PubSub ハブ名 | `transcription` |
-| `COSMOS_DB_ENDPOINT` | Cosmos DB エンドポイント | `https://xxx.documents.azure.com/` |
-| `COSMOS_DB_KEY` | Cosmos DB キー | `*****` |
+| `COSMOS_DB_ENDPOINT` | Cosmos DB エンドポイント | **URLのみ** (例: `https://xxx.documents.azure.com:443/`) |
+| `COSMOS_DB_KEY` | Cosmos DB キー | |
 | `COSMOS_DB_DATABASE` | データベース名 | `transcribe-app` |
 | `COSMOS_DB_CONTAINER` | コンテナ名 | `sessions` |
+

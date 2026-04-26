@@ -92,9 +92,25 @@ cd ../server
 npm run dev
 ```
 
+## 主要な機能と UX の特徴
+
+| 機能 | 説明 |
+|:---|:---|
+| **リアルタイム・フィードバック** | Azure Speech SDK を使用し、認識中のテキスト（Interim）と確定したテキスト（Final）を即座に表示 |
+| **セッション管理** | React Router 7 の遷移に合わせ、Zustand ストアのクリーンアップと既存データの自動ロードを実行 |
+| **話者カラーリング** | 各参加者の ID に基づいて固有のカラーを自動生成し、発言者を視覚的に区別 |
+| **自動スクロール** | 新しい発言が追加されるたびに、文字起こしパネルを最新位置までスムーズにスクロール |
+| **Markdown エクスポート** | AI 生成された議事録を構造を保ったまま Markdown 形式でコピー・保存可能 |
+
 ## 主要なカスタムフック
 
 | フック | ファイル | 責務 |
 |:---|:---|:---|
-| `useSpeechTranscriber` | `features/transcript/hooks/` | Azure Speech SDK の初期化・音声キャプチャ・文字起こし結果受信 |
-| `usePubSub` | `features/transcript/hooks/` | Web PubSub への WebSocket 接続・メッセージ受信・自動再接続 |
+| `useSpeechTranscriber` | `features/transcript/hooks/` | Azure Speech SDK の初期化・音声キャプチャ・文字起こし結果の受信とストアへの保存 |
+| `usePubSub` | `features/transcript/hooks/` | Azure Web PubSub への WebSocket 接続・他ユーザーからのメッセージ受信・自動再接続管理 |
+
+## 実装上の注意点
+
+- **セッションの分離**: `SessionPage` では、URL の `id` が変更されるたびに `clearTranscripts` を実行し、異なるセッションのデータが混ざらないように設計されています。
+- **エラーハンドリング**: 音声認識の起動失敗やネットワーク切断時、UI 上にわかりやすいエラーメッセージを表示します。
+- **パフォーマンス**: 大量の文字起こしが発生しても、仮想リストや自動スクロールの最適化によりブラウザの負荷を抑えています。

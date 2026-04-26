@@ -388,7 +388,9 @@ sequenceDiagram
 | バージョン管理 | Git / GitHub |
 | CI/CD | GitHub Actions |
 | インフラ管理 | Terraform（Azure リソースのプロビジョニング） |
-| コンテナ化 | Docker（ローカル開発環境用） |
+| F-UI-006 | レスポンシブデザインによるモバイルブラウザ対応 | 推奨 |
+| F-UI-007 | 自動スクロール：最新の発言が追加された際に自動で最下部へ移動すること | 必須 |
+| F-UI-008 | 話者ごとの自動カラーリング：発言者を視覚的に区別できること | 必須 |
 
 ---
 
@@ -398,9 +400,9 @@ sequenceDiagram
 |:---|:---|:---|
 | Azure AI Speech Service | S0（Standard） | ConversationTranscriber、話者分離対応 |
 | Azure OpenAI Service | Standard | GPT-4o モデルデプロイ |
-| Azure Web PubSub | Free → Standard | 開発時は Free、本番は Standard |
-| Azure App Service | B1 → S1 | 開発時は B1、本番は S1 以上 |
-| Azure Cosmos DB | Serverless → Provisioned | 開発時は Serverless で低コスト運用 |
+| Azure Web PubSub | Free_F1 | 開発環境。WebSocket 通信に必須 |
+| Azure App Service | B1 | japaneast のクォータ制限回避のため B1 を使用 |
+| Azure Cosmos DB | Serverless | 低コスト運用。インデックス設計に注意 |
 | Azure Application Insights | — | 監視・ログ収集 |
 
 ---
